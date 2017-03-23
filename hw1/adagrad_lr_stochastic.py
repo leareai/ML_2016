@@ -54,36 +54,49 @@ def get_data(d_trunk):
     return output, normal_data, input_data
 
 
+def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
+    global w, loss, e
+    min_gradient_value = 0.000001
+    min_descent = 0.0000001
+    length = input_x.columns.size
+    rate = base_rate
+    count = 0
+    size = input_x.index.size
+    gradient_square_sum = np.zeros(length)
+
+    descent = float('Inf')
+    gradw_value = float('Inf')
+    while gradw_value > min_gradient_value or descent > min_descent:
+        index = randint(0, size - 1)
+        y_picked = output_y[index]
+        x_picked = input_x.ix[index]
+        e_picked = y_picked - x_picked.dot(w)
+        gradient = -2 * e_picked * x_picked
+        gradient_square_sum += gradient * gradient
+        adagrad = np.sqrt(gradient_square_sum)
+        adagrad_gradient = gradient / adagrad
+        w -= rate * adagrad_gradient
+        descent = np.sqrt(adagrad_gradient.dot(adagrad_gradient)) * rate
+        if count % 1000 == 0:
+            gradient_value = np.sqrt(gradient.dot(gradient))
+            e = output_y - input_x.dot(w)
+            loss = np.sqrt(e.dot(e) / size)
+            print 'grad:', gradient_value, 'decent:', descent, ', loss:', loss, ', count:', count
+        count += 1
+
+    return w, loss
+
 raw = load_data()
 dataTrunk = slice_into_trunks(raw)
 y, x, origX = get_data(dataTrunk)
 
-length = x.columns.size
-w = np.ones(length)
-base_rate = 0.1
-rate = base_rate
-gradient_value = 1
-gradientMax = 1
-count = 0
-size = x.index.size
-gradientSquareSum = np.zeros(length)
-descent = np.sqrt(w.dot(w))
-gradw_value=1
-while gradw_value > 0.00001 or descent > 0.0000001:
-    index = randint(0, size - 1)
-    y_head = y[index]
-    x_head = x.ix[index]
-    e_head = y_head - x_head.dot(w)
-    gradw = -2 * e_head * x_head
-    gradw_sqr = gradw * gradw
-    gradientSquareSum += gradw_sqr
-    adagrad = np.sqrt(gradientSquareSum)
-    adagrad_gradw = gradw / adagrad
-    w -= rate * adagrad_gradw
-    if count % 1000 == 0:
-        descent = np.sqrt(adagrad_gradw.dot(adagrad_gradw)) * rate
-        gradient_value = np.sqrt(gradw.dot(gradw))
-        e = y - x.dot(w)
-        loss = np.sqrt(e.dot(e) / size)
-        print 'grad:', gradient_value, 'decent:', descent, ', loss:', loss, ', count:', count
-    count += 1
+w = np.ones(x.columns.size)
+loss = e = 0
+
+if 'adagrad_base_rate' not in globals():
+    adagrad_base_rate = 0.1
+
+print 'base rate:', adagrad_base_rate
+start_time = time.time()
+w, loss = stochastic_gradient_descent_with_adagrad(x, y, adagrad_base_rate)
+print 'time:', (time.time() - start_time)
