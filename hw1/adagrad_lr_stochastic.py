@@ -60,7 +60,7 @@ y, x, origX = get_data(dataTrunk)
 
 length = x.columns.size
 w = np.ones(length)
-base_rate = 1
+base_rate = 0.1
 rate = base_rate
 gradient_value = 1
 gradientMax = 1
@@ -68,8 +68,8 @@ count = 0
 size = x.index.size
 gradientSquareSum = np.zeros(length)
 descent = np.sqrt(w.dot(w))
-
-while descent > 0.000000000000001:
+gradw_value=1
+while gradw_value > 0.00001 or descent > 0.0000001:
     index = randint(0, size - 1)
     y_head = y[index]
     x_head = x.ix[index]
@@ -81,11 +81,9 @@ while descent > 0.000000000000001:
     adagrad_gradw = gradw / adagrad
     w -= rate * adagrad_gradw
     if count % 1000 == 0:
-        adagrad_norm = np.sqrt(adagrad.dot(adagrad))
         descent = np.sqrt(adagrad_gradw.dot(adagrad_gradw)) * rate
         gradient_value = np.sqrt(gradw.dot(gradw))
         e = y - x.dot(w)
         loss = np.sqrt(e.dot(e) / size)
-        print 'grad:', gradient_value, 'adagrad_norm:', adagrad_norm, 'decent:', descent, \
-            ', loss:', loss, ', count:', count
+        print 'grad:', gradient_value, 'decent:', descent, ', loss:', loss, ', count:', count
     count += 1
