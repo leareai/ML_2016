@@ -126,7 +126,7 @@ def batch_gradient_descent(input_x, output_y, base_rate, shrinking_rate, expendi
     return w, loss
 
 
-data_item = {
+test_item = {
  u'AMB_TEMP',
  u'CH4',
  u'CO',
@@ -169,8 +169,8 @@ hours = 9
 e = 0
 loss = 0
 
-raw, raw_y = load_data(data_item)
-dataTrunk = slice_into_trunks(raw, len(data_item))
+raw, raw_y = load_data(test_item)
+dataTrunk = slice_into_trunks(raw, len(test_item))
 y_trunk = slice_into_trunks(raw_y, 1)
 y = get_output(y_trunk, hours)
 x, origX = get_data(dataTrunk, hours)
