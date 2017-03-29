@@ -22,7 +22,6 @@ def load_test_data():
     normal_data_base = normal_data
     normal_data_power = normal_data
     for j in range(1, power):
-        print 'here'
         normal_data_power = normal_data_power * normal_data_base
         normal_data = pd.concat([normal_data, normal_data_power], axis=1, ignore_index=True)
     normal_data['b'] = 1
