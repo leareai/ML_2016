@@ -21,7 +21,7 @@ def load_test_data():
     normal_data = (input_data - input_data.mean()) / input_data.std()
     normal_data_base = normal_data
     normal_data_power = normal_data
-    for j in range(1, power):
+    for j in range(1, power_value):
         normal_data_power = normal_data_power * normal_data_base
         normal_data = pd.concat([normal_data, normal_data_power], axis=1, ignore_index=True)
     normal_data['b'] = 1
@@ -32,8 +32,8 @@ if 'test_item' not in globals():
                  u'PM10', u'PM2.5', u'RAINFALL', u'RH', u'SO2', u'THC', u'WD_HR',
                  u'WIND_DIREC', u'WIND_SPEED', u'WS_HR'}
 
-if 'power' not in globals():
-    power = 1
+if 'power_value' not in globals():
+    power_value = 1
 
 ids, testX, origTestX = load_test_data()
 testXArray = testX.as_matrix();

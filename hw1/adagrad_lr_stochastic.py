@@ -10,52 +10,6 @@ from random import randint
 
 import signal
 
-def load_data():
-    raw_data = pd.read_csv('./data/train.csv', na_values='NR', encoding='big5')
-    raw_data.ix[raw_data[u'測項'] == 'RAINFALL', 3:] = raw_data.ix[raw_data[u'測項'] == 'RAINFALL', 3:].fillna(0)
-    raw_data.drop(raw_data.columns[0:3], axis=1, inplace=True)
-    return raw_data
-
-
-def slice_into_trunks(raw_data):
-    """split data by month"""
-    trunk = []
-    row_offset = 18
-    row_index = 0
-    indexes = range(row_offset)
-    for mon in range(12):
-        month_trunk = []
-        for day in range(20):
-            data_per_day = raw_data.ix[row_index:row_index + row_offset - 1]
-            data_per_day.index = indexes
-            month_trunk.append(data_per_day)
-            row_index += row_offset
-        trunk.append(pd.concat(month_trunk, axis=1))
-    return trunk
-
-
-def get_data(d_trunk):
-    i = 0
-    hours = 9
-    data_dict = {}
-    output = []
-    output_index = -9
-    for data in d_trunk:
-        for j in range(data.columns.size - hours + 1):
-            vector = data.ix[:, j:j + hours].values.T.flatten()
-            data_dict[i] = vector
-            output.append(vector[output_index])
-            i += 1
-
-    output.pop(0)
-    del data_dict[i - 1]
-    input_data = DataFrame(data_dict).T
-    normal_data = (input_data - input_data.mean()) / input_data.std()
-    normal_data['b'] = 1
-    input_data['b'] = 1
-    return output, normal_data, input_data
-
-
 def set_signal(log_func):
     def signal_handler(sig, frame):
         print '\n'
@@ -77,6 +31,7 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
     global w, loss, e
     min_gradient_value = 1e-6
     min_descent = e-7
+    fudge_factor = 1e-6
     rate = base_rate
 
     data_size = input_x.shape[0]
@@ -103,10 +58,11 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
         e_picked = y_picked - x_picked.dot(w)
         gradient = -2 * e_picked * x_picked
         gradient_square_sum += gradient * gradient
-        adagrad = np.sqrt(gradient_square_sum)
-        adagrad_gradient = gradient / adagrad
-        w -= rate * adagrad_gradient
-        descent = np.sqrt(adagrad_gradient.dot(adagrad_gradient)) * rate
+
+        adagrad = np.sqrt(gradient_square_sum+fudge_factor)
+        adagrad_gradient = rate * gradient / adagrad
+        w -= adagrad_gradient
+        descent = np.sqrt(adagrad_gradient.dot(adagrad_gradient))
         gradient_value = np.sqrt(gradient.dot(gradient))
         if loggable and count % log_rate == 0:
             log()
@@ -114,11 +70,6 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
 
     log()
     return w, loss
-
-
-raw = load_data()
-dataTrunk = slice_into_trunks(raw)
-y, x, origX = get_data(dataTrunk)
 
 w = np.ones(x.columns.size)
 loss = e = 0
