@@ -42,13 +42,13 @@ def get_output(trunk, hrs):
     return temp_array.reshape(temp_shape[0]*temp_shape[1], )
 
 
-def get_data(d_trunk, hrs):
+def get_data(d_trunk, start_hr, end_hr):
     i = 0
     data_dict = {}
     for data in d_trunk:
-        for j in range(data.columns.size - hrs):
+        for j in range(data.columns.size - end_hr):
             # vector = data.ix[:, j:j + hrs].values.T.flatten()
-            vector = data.ix[:, j:j + hrs].values.flatten()
+            vector = data.ix[:, j+start_hr:j + end_hr].values.flatten()
             data_dict[i] = vector
             i += 1
 
@@ -90,10 +90,18 @@ test_item = {
 if 'power_value' not in globals():
     power_value = 1
 
-hours = 9
+if 'start_hour' not in globals():
+    start_hour = 0
+
+end_hour = 9
 
 raw, raw_y = load_data(test_item)
 dataTrunk = slice_into_trunks(raw, len(test_item))
 y_trunk = slice_into_trunks(raw_y, 1)
-y = get_output(y_trunk, hours)
-x, origX = get_data(dataTrunk, hours)
+y = get_output(y_trunk, end_hour)
+x, origX = get_data(dataTrunk, start_hour, end_hour)
+ww=np.linalg.lstsq(x,y)
+loss = np.sqrt(ww[1]/len(y))
+w=ww[0]
+
+print 'power_value', power_value, ', optimal loss: ', loss

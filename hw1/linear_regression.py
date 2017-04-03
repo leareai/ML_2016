@@ -41,7 +41,8 @@ def batch_gradient_descent(input_x, output_y, base_rate, shrinking_rate, expendi
     data_size = input_x.shape[0]
 
     def log():
-        print 'grad:', gradient_value, 'rate:', rate, 'descent:', descent, ', loss:', loss, ', count:', count
+        target_loss = np.sqrt(loss*loss+w.dot(w)*regulation/data_size)
+        print 'grad:', gradient_value, 'rate:', rate, 'descent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count
 
     set_signal(log)
 
@@ -49,7 +50,7 @@ def batch_gradient_descent(input_x, output_y, base_rate, shrinking_rate, expendi
 
     prev_loss = np.sqrt(e.dot(e) / data_size)
     while gradient_value > min_gradient_value or descent > min_descent:
-        gradient = -2 * e.dot(input_x)
+        gradient = -2 * e.dot(input_x) + 2 * regulation * w
         gradient_value = np.sqrt(gradient.dot(gradient))
         rate = base_rate / gradient_value if (gradient_value > gradient_max) else base_rate
         w -= rate * gradient
@@ -78,11 +79,14 @@ if 'log_rate' not in globals():
 if 'input_base_rate' not in globals():
     input_base_rate = 0.005
 
-if 'shrk_rate' not in globals():
-    shrk_rate = 0.8
+# if 'shrk_rate' not in globals():
+shrk_rate = 0.99
 
-if 'epd_rate' not in globals():
-    epd_rate = 1.11
+# if 'epd_rate' not in globals():
+epd_rate = 1.01
+
+if 'regulation' not in globals():
+    regulation = 0;
 
 
 w = np.ones(x.columns.size)
@@ -90,11 +94,10 @@ e = 0
 loss = 0
 
 print'Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate'
-print 'base rate:', input_base_rate, 'shrinking rate:', shrk_rate, 'expending rate:', epd_rate
-ww=np.linalg.lstsq(x, y)
-loss=np.sqrt(ww[1][0]/len(y))
-print 'optimal loss: ', loss
-
+print 'base rate:', input_base_rate, 'shrinking rate:', shrk_rate, 'expending rate:', epd_rate, 'regulation', regulation
+w=ww[0]
+loss = np.sqrt(ww[1]/len(y))
+print loss
 start_time = time.time()
 w, loss = batch_gradient_descent(x.as_matrix(), y, input_base_rate, shrk_rate, epd_rate)
 print 'time:', (time.time() - start_time)

@@ -43,8 +43,10 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
     def log():
         global e, loss
         e = output_y - input_x.dot(w)
-        loss = np.sqrt(e.dot(e) / data_size)
-        print 'grad:', gradient_value, 'decent:', descent, ', loss:', loss, ', count:', count
+        e_square = e.dot(e)
+        loss = np.sqrt(e_square / data_size)
+        target_loss = np.sqrt((e_square + regulation * w.dot(w))/data_size)
+        print 'grad:', gradient_value, 'decent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count
 
     set_signal(log)
 
@@ -56,7 +58,7 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
         y_picked = output_y[index]
         x_picked = input_x[index]
         e_picked = y_picked - x_picked.dot(w)
-        gradient = -2 * e_picked * x_picked
+        gradient = -2 * e_picked * x_picked + 2 * regulation * w
         gradient_square_sum += gradient * gradient
 
         adagrad = np.sqrt(gradient_square_sum+fudge_factor)
@@ -83,9 +85,13 @@ if 'log_rate' not in globals():
 if 'adagrad_base_rate' not in globals():
     adagrad_base_rate = 0.1
 
+if 'regulation' not in globals():
+    regulation = 0;
+
 print'Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate'
-print 'base rate:', adagrad_base_rate
+print 'base rate:', adagrad_base_rate, 'regulation', regulation
 
 start_time = time.time()
+# w=ww[0]
 w, loss = stochastic_gradient_descent_with_adagrad(x.as_matrix(), y, adagrad_base_rate)
 print 'time:', (time.time() - start_time)

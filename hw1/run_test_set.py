@@ -3,7 +3,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 
 
-def load_test_data():
+def load_test_data(start_hr):
     test_raw_data = pd.read_csv('./data/test_X.csv', na_values='NR', index_col=0, header=None)
     test_raw_data.fillna(0, inplace=True)
     test_raw_data = test_raw_data.ix[test_raw_data[1].isin(test_item)]
@@ -13,7 +13,7 @@ def load_test_data():
     data_dict = {}
     for x in index:
         # vector = test_raw_data.ix[x, 2:].values.T.flatten()
-        vector = test_raw_data.ix[x, 2:].values.flatten()
+        vector = test_raw_data.ix[x, 2+start_hr:].values.flatten()
         data_dict[i] = vector
         i += 1
 
@@ -35,8 +35,12 @@ if 'test_item' not in globals():
 if 'power_value' not in globals():
     power_value = 1
 
-ids, testX, origTestX = load_test_data()
+if 'start_hour' not in globals():
+    start_hour = 0
+
+ids, testX, origTestX = load_test_data(start_hour)
 testXArray = testX.as_matrix();
 testY = testXArray.dot(w)
 result = DataFrame(testY, index=ids, columns=['value'])
 result.to_csv('./result.csv')
+print 'save result!!'
