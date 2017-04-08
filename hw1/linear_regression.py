@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import signal
+import scipy.sparse.linalg
 
 import sys
 from pandas import Series, DataFrame
@@ -12,15 +13,15 @@ import time
 
 def set_signal(log_func):
     def signal_handler(sig, frame):
-        print '\n'
+        print('\n')
         log_func()
-        print 'time:', (time.time() - start_time)
+        print('time:', (time.time() - start_time))
         if sig == signal.SIGQUIT:
-            print'You pressed Ctrl+\\'
+            print('You pressed Ctrl+\\')
             global loggable
             loggable = not loggable
         elif sig == signal.SIGINT:
-            print'You pressed Ctrl+C'
+            print('You pressed Ctrl+C')
 
             sys.exit(0)
 
@@ -42,7 +43,7 @@ def batch_gradient_descent(input_x, output_y, base_rate, shrinking_rate, expendi
 
     def log():
         target_loss = np.sqrt(loss*loss+w.dot(w)*regulation/data_size)
-        print 'grad:', gradient_value, 'rate:', rate, 'descent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count
+        print('grad:', gradient_value, 'rate:', rate, 'descent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count)
 
     set_signal(log)
 
@@ -70,6 +71,14 @@ def batch_gradient_descent(input_x, output_y, base_rate, shrinking_rate, expendi
     return w, loss
 
 
+def get_opt(reg):
+    global w
+    w1=scipy.sparse.linalg.lsmr(x.as_matrix(),y, np.sqrt(reg))[0]
+    ee=(y-x.dot(w1)).dot(y-x.dot(w1))
+    print('reg:', reg, 'loss:', (np.sqrt((ee + reg*w1.dot(w1))/x.shape[0]), np.sqrt(ee/x.shape[0])))
+    w=w1
+
+
 if 'loggable' not in globals():
     loggable = False
 
@@ -86,18 +95,23 @@ shrk_rate = 0.99
 epd_rate = 1.01
 
 if 'regulation' not in globals():
-    regulation = 0;
+    regulation = 0
 
 
 w = np.ones(x.columns.size)
 e = 0
 loss = 0
 
-print'Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate'
-print 'base rate:', input_base_rate, 'shrinking rate:', shrk_rate, 'expending rate:', epd_rate, 'regulation', regulation
-w=ww[0]
-loss = np.sqrt(ww[1]/len(y))
-print loss
+print('Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate')
+print('base rate:', input_base_rate, 'shrinking rate:', shrk_rate, 'expending rate:', epd_rate, 'regulation', regulation)
+# w=ww[0]
+# loss = np.sqrt(ww[1]/len(y))
+# print(loss)
+# w1=scipy.sparse.linalg.lsqr(x.as_matrix(),y, np.sqrt(reg))[0]
+# ee=(y-x.dot(w1)).dot(y-x.dot(w1))
+# print ('reg:', reg, 'loss:', (np.sqrt((ee + reg*w1.dot(w1))/x.shape[0]), np.sqrt(ee/x.shape[0])))
+# w1=np.linalg.inv(x.T.dot(x)+np.identity(x.shape[1])).dot(x.T).dot(y)
+# print (np.sqrt(((y-x.dot(w1)).dot(y-x.dot(w1)) + regulation*w1.dot(w1))/x.shape[0]))
 start_time = time.time()
 w, loss = batch_gradient_descent(x.as_matrix(), y, input_base_rate, shrk_rate, epd_rate)
-print 'time:', (time.time() - start_time)
+print('time:', (time.time() - start_time))

@@ -15,7 +15,18 @@ def load_data(selected_items):
     raw_data.fillna(0, inplace='True')
     raw_output = raw_data.ix[raw_data[u'測項'] == 'PM2.5', 3:]
     raw_data = raw_data.ix[raw_data[u'測項'].isin(selected_items)]
+
+    # Dump negative value
+    # aa= raw_data.drop(raw_data.columns[0:3], axis=1)
+    # a_set=set()
+    # for x in aa:
+    #     print x, aa[aa[x] < 0].index.tolist()
+    #     a_set.update(aa[aa[x] < 0].index.tolist())
+    # for x in sorted(list(a_set)):
+    #     print raw_data.ix[x, :]
+
     raw_data.drop(raw_data.columns[0:3], axis=1, inplace=True)
+
     return raw_data, raw_output
 
 
@@ -42,7 +53,7 @@ def get_output(trunk, hrs):
     return temp_array.reshape(temp_shape[0]*temp_shape[1], )
 
 
-def get_data(d_trunk, start_hr, end_hr):
+def get_data(d_trunk, start_hr, end_hr, output):
     i = 0
     data_dict = {}
     for data in d_trunk:
@@ -53,7 +64,20 @@ def get_data(d_trunk, start_hr, end_hr):
             i += 1
 
     input_data = DataFrame(data_dict).T
-    normal_data = (input_data - input_data.mean()) / input_data.std()
+    output = DataFrame(output)
+    output.index = input_data.index
+
+    # a_list = []
+    # for idx in input_data.index:
+    #     if np.any(input_data.ix[idx] < 0):
+    #         a_list.append(idx)
+    # input_data=input_data.drop(a_list)
+    # output = output.drop(a_list)
+    output = output.as_matrix();
+    output = output.reshape(output.shape[0],);
+
+    # normal_data = (input_data - input_data.mean()) / input_data.std()
+    normal_data = input_data
 
     normal_data_base = normal_data
     normal_data_power = normal_data
@@ -62,8 +86,7 @@ def get_data(d_trunk, start_hr, end_hr):
         normal_data = pd.concat([normal_data, normal_data_power], axis=1, ignore_index=True)
 
     normal_data['b'] = 1
-    input_data['b'] = 1
-    return normal_data, input_data
+    return normal_data, input_data, output
 
 test_item = {
  u'AMB_TEMP',
@@ -99,9 +122,10 @@ raw, raw_y = load_data(test_item)
 dataTrunk = slice_into_trunks(raw, len(test_item))
 y_trunk = slice_into_trunks(raw_y, 1)
 y = get_output(y_trunk, end_hour)
-x, origX = get_data(dataTrunk, start_hour, end_hour)
+x, origX, y= get_data(dataTrunk, start_hour, end_hour, y)
 ww=np.linalg.lstsq(x,y)
 loss = np.sqrt(ww[1]/len(y))
 w=ww[0]
 
-print 'power_value', power_value, ', optimal loss: ', loss
+print ('power_value', power_value, ', optimal loss: ', loss)
+

@@ -20,7 +20,7 @@ for i in range(18):
 	Data.append([])
 
 n_row = 0
-text = open(str(sys.argv[1]), 'r', encoding='big5')
+text = open('data/train.csv', 'r', encoding='big5')
 #text = open('train.csv', 'r', encoding='big5')
 row = csv.reader(text , delimiter=",")
 for r in row:
@@ -48,7 +48,9 @@ Data = np.asarray(Data)
 Data = np.vstack((Data, np.zeros((2, 12*20*24))))
 
 # converting wind data from polar coordinate to cartesian, r, cos, sin. 
-(Data[14], Data[15], Data[16], Data[17], Data[18], Data[19]) = (Data[16], np.cos(np.radians(Data[15])), np.sin(np.radians(Data[15])), Data[17], np.cos(np.radians(Data[14])), np.sin(np.radians(Data[14])))
+(Data[14], Data[15], Data[16], Data[17], Data[18], Data[19]) = \
+    (Data[16], np.cos(np.radians(Data[15])), np.sin(np.radians(Data[15])),
+     Data[17], np.cos(np.radians(Data[14])), np.sin(np.radians(Data[14])))
 
 for j in range(2,maxpower+1):
     for i in range(14):

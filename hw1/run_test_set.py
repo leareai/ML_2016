@@ -18,7 +18,8 @@ def load_test_data(start_hr):
         i += 1
 
     input_data = DataFrame(data_dict).T
-    normal_data = (input_data - input_data.mean()) / input_data.std()
+    # normal_data = (input_data - input_data.mean()) / input_data.std()
+    normal_data = input_data
     normal_data_base = normal_data
     normal_data_power = normal_data
     for j in range(1, power_value):
@@ -43,4 +44,4 @@ testXArray = testX.as_matrix();
 testY = testXArray.dot(w)
 result = DataFrame(testY, index=ids, columns=['value'])
 result.to_csv('./result.csv')
-print 'save result!!'
+print ('save result!!')
