@@ -67,12 +67,12 @@ def get_data(d_trunk, start_hr, end_hr, output):
     output = DataFrame(output)
     output.index = input_data.index
 
-    # a_list = []
-    # for idx in input_data.index:
-    #     if np.any(input_data.ix[idx] < 0):
-    #         a_list.append(idx)
-    # input_data=input_data.drop(a_list)
-    # output = output.drop(a_list)
+    a_list = []
+    for idx in input_data.index:
+        if np.any(input_data.ix[idx] < 0):
+            a_list.append(idx)
+    input_data=input_data.drop(a_list)
+    output = output.drop(a_list)
     output = output.as_matrix();
     output = output.reshape(output.shape[0],);
 
@@ -86,6 +86,7 @@ def get_data(d_trunk, start_hr, end_hr, output):
         normal_data = pd.concat([normal_data, normal_data_power], axis=1, ignore_index=True)
 
     normal_data['b'] = 1
+    input_data['b'] = 1
     return normal_data, input_data, output
 
 test_item = {
