@@ -27,7 +27,7 @@ def set_signal(log_func):
     signal.signal(signal.SIGINT, signal_handler)
 
 
-def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
+def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1, batch_size_value=256):
     global w, loss, e
     min_gradient_value = 1e-6
     min_descent = e-7
@@ -39,31 +39,40 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
 
     fudge_factor = 1e-6
     feature_number = input_x.shape[1]
+    adagrad = np.zeros(feature_number);
 
     def log():
         global e, loss
         e = output_y - input_x.dot(w)
         e_square = e.dot(e)
-        loss = np.sqrt(e_square / data_size)
         target_loss = np.sqrt((e_square + regulation * w.dot(w))/data_size)
-        print('grad:', gradient_value, 'decent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count)
+        adagrad_value = np.sqrt(adagrad.dot(adagrad))
+        print('grad:', gradient_value, 'adagrad', adagrad_value, 'decent:', descent, ', target loss:', target_loss, ', count:', count)
 
 
     set_signal(log)
 
-    rand_range = data_size - 1
+    current_index = data_size
+    io_pair = np.c_[input_x.reshape(data_size, -1), output_y.reshape(data_size, -1)]
     gradient_square_sum = np.zeros(feature_number)
-    # while gradient_value > min_gradient_value or descent > min_descent:
     while gradient_value > min_gradient_value and descent > min_descent:
-        index = randint(0, rand_range)
-        y_picked = output_y[index]
-        x_picked = input_x[index]
-        e_picked = y_picked - x_picked.dot(w)
-        gradient = -2 * e_picked * x_picked + 2 * regulation * w
-        gradient_square_sum += gradient * gradient
+        if current_index >= data_size:
+            np.random.shuffle(io_pair)
+            current_index = 0
+            input_x = io_pair[:, :feature_number]
+            output_y = io_pair[:, -1]
 
+        start = current_index
+        current_index += batch_size_value
+        x_picked = input_x[start:current_index]
+        y_picked = output_y[start:current_index]
+        e_picked = y_picked - x_picked.dot(w)
+        gradient = -2 * e_picked.dot(x_picked) + 2 * regulation * w
+
+        gradient_square_sum += gradient * gradient
         adagrad = np.sqrt(gradient_square_sum+fudge_factor)
         adagrad_gradient = rate * gradient / adagrad
+
         w -= adagrad_gradient
         descent = np.sqrt(adagrad_gradient.dot(adagrad_gradient))
         gradient_value = np.sqrt(gradient.dot(gradient))
@@ -80,8 +89,11 @@ loss = e = 0
 if 'loggable' not in globals():
     loggable = False
 
+if 'batch_size' not in globals():
+    batch_size = 64
+
 if 'log_rate' not in globals():
-    log_rate = 100000
+    log_rate = 100000/batch_size
 
 if 'adagrad_base_rate' not in globals():
     adagrad_base_rate = 0.1
@@ -90,8 +102,8 @@ if 'regulation' not in globals():
     regulation = 0;
 
 print('Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate')
-print ('base rate:', adagrad_base_rate, 'regulation', regulation)
+print ('base rate:', adagrad_base_rate, 'regulation:', regulation, 'batch_size:', batch_size)
 
 start_time = time.time()
-w, loss = stochastic_gradient_descent_with_adagrad(x.as_matrix(), y, adagrad_base_rate)
+w, loss = stochastic_gradient_descent_with_adagrad(x.as_matrix(), y, adagrad_base_rate, batch_size)
 print ('time:', (time.time() - start_time))
