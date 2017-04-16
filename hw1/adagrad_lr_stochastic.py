@@ -12,15 +12,15 @@ import signal
 
 def set_signal(log_func):
     def signal_handler(sig, frame):
-        print '\n'
+        print('\n')
         log_func()
-        print 'time:', (time.time() - start_time)
+        print('time:', (time.time() - start_time))
         if sig == signal.SIGQUIT:
-            print'\nYou pressed Ctrl+\\'
+            print('\nYou pressed Ctrl+\\')
             global loggable
             loggable = not loggable
         elif sig == signal.SIGINT:
-            print'\nYou pressed Ctrl+C:'
+            print('\nYou pressed Ctrl+C:')
             sys.exit(0)
 
     signal.signal(signal.SIGQUIT, signal_handler)
@@ -31,14 +31,14 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
     global w, loss, e
     min_gradient_value = 1e-6
     min_descent = e-7
-    fudge_factor = 1e-6
-    rate = base_rate
-
-    data_size = input_x.shape[0]
-    feature_number = input_x.shape[1]
-    descent = float('Inf')
     gradient_value = float('Inf')
+    descent = float('Inf')
+    rate = base_rate
     count = 0
+    data_size = input_x.shape[0]
+
+    fudge_factor = 1e-6
+    feature_number = input_x.shape[1]
 
     def log():
         global e, loss
@@ -46,7 +46,8 @@ def stochastic_gradient_descent_with_adagrad(input_x, output_y, base_rate=0.1):
         e_square = e.dot(e)
         loss = np.sqrt(e_square / data_size)
         target_loss = np.sqrt((e_square + regulation * w.dot(w))/data_size)
-        print 'grad:', gradient_value, 'decent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count
+        print('grad:', gradient_value, 'decent:', descent, ', target loss:', target_loss, ', loss:', loss, ', count:', count)
+
 
     set_signal(log)
 
@@ -88,10 +89,9 @@ if 'adagrad_base_rate' not in globals():
 if 'regulation' not in globals():
     regulation = 0;
 
-print'Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate'
-print 'base rate:', adagrad_base_rate, 'regulation', regulation
+print('Start iteration, you can pressed Ctrl+\\ to switch log, pressed Ctrl+C to force terminate')
+print ('base rate:', adagrad_base_rate, 'regulation', regulation)
 
 start_time = time.time()
-# w=ww[0]
 w, loss = stochastic_gradient_descent_with_adagrad(x.as_matrix(), y, adagrad_base_rate)
-print 'time:', (time.time() - start_time)
+print ('time:', (time.time() - start_time))
